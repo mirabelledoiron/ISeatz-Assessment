@@ -1,0 +1,380 @@
+/*
+  styles/main.css — Global stylesheet
+  Author: Mirabelle Doiron
+
+  Single entry point for all styles. Imported once in main.tsx.
+
+  Token load order (all via TypeScript, injected before React mounts):
+    tokens/colors.ts      → raw color palette
+    tokens/themes/        → --background, --content, --action… (light + dark)
+    tokens/typography.ts  → --font-family, --font-size-*, .type-* classes + font loading
+    tokens/scale.css      → --xxs, --sm, --radius-md, --transition-fast…
+
+  No component owns a separate CSS file — If this was a larger project, I would split components into separate CSS files, 
+  but for this assessment I think it's simpler to keep everything in one place.
+*/
+
+@import './tokens/scale.css';
+
+/* Reset */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  color: var(--content);
+  background-color: var(--background);
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+ul, ol { list-style: none; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Utilities */
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--sm);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.focus-ring {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* App layout */
+
+#root {
+  min-height: 100vh;
+}
+
+/* Header */
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  padding: var(--md) var(--xl);
+  background: var(--surface);
+  border-bottom: var(--xxs) solid var(--border);
+}
+
+.site-header__logo {
+  height: 24px;
+  width: auto;
+}
+
+.site-header__theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--content);
+  transition: color var(--transition-fast);
+}
+
+.site-header__theme-toggle:hover {
+  color: var(--action);
+}
+
+/* All icons are solid black PNGs — invert(1) is safe and gives clean white in dark mode.
+   Would need per-icon SVGs or separate dark assets if any icon uses multiple colors. */
+[data-theme="dark"] .site-header__theme-toggle img,
+[data-theme="dark"] .accordion__icon,
+[data-theme="dark"] .page-header__icon {
+  filter: invert(1);
+}
+
+/* Main content */
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--xl);
+  padding: var(--xl);
+}
+
+/* Page header */
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+.page-header__icon {
+  width: 32px;
+  height: 32px;
+}
+
+/* Accordion */
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+  width: 100%;
+}
+
+/* Smooth the card → flat-bordered transition when opening */
+.accordion__item {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border-radius: 0;
+  transition: border-radius var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* Open state: item becomes a flat bordered section.
+   background-color: transparent so the panel content sits on the page background (not surface).
+   border-radius: 0 to match the Figma open state — the header and panel share flush edges. */
+.accordion__item--open {
+  border-radius: 0;
+  background-color: transparent;
+}
+
+.accordion__header {
+  display: flex;
+  align-items: center;
+  gap: var(--lg);
+  width: 100%;
+  padding: var(--md) var(--lg);
+  background: var(--surface);
+  border: var(--xxs) solid var(--border);
+  border-radius: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--content);
+  transition: color var(--transition-fast);
+}
+
+.accordion__item--open .accordion__header {
+  border-radius: 0;
+}
+
+.accordion__header:hover {
+  color: var(--action);
+}
+
+.accordion__header:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.accordion__header-label {
+  flex: 1;
+}
+
+.accordion__icon {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.accordion__panel[hidden] {
+  display: none;
+}
+
+.accordion__panel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  padding: var(--lg);
+  border-right: var(--xxs) solid var(--border);
+  border-bottom: var(--xxs) solid var(--border);
+  border-left: var(--xxs) solid var(--border);
+}
+
+/* Bowl sections */
+
+.bowl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+/* legend doesn't reliably participate in flex gap — use explicit margin */
+.bowl-section > legend {
+  margin-bottom: var(--lg);
+}
+
+.bowl-section__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lg);
+}
+
+/* Radio */
+
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--md);
+  cursor: pointer;
+  width: 100%;
+  color: var(--content);
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-style: normal;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
+}
+
+.radio__input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: var(--lg);
+  height: var(--lg);
+  margin-top: var(--sm);
+  border: var(--xxs) solid var(--border);
+  border-radius: var(--radius-full);
+  background-color: var(--background);
+  cursor: pointer;
+}
+
+/* Figma (Enabled, Check=True): fill = --background, stroke = --border. The inner dot uses --action. */
+.radio__input:checked {
+  border-color: var(--border);
+  box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 8px var(--action);
+}
+
+/* Figma (Hover, Check=True): stroke uses --action */
+.radio__input:checked:hover {
+  border-color: var(--action);
+}
+
+/* Keep the control stroke as --border; focus ring comes from outline tokens */
+.radio__input:checked:focus-visible {
+  border-color: var(--border);
+}
+
+.radio__input:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.radio__help {
+  overflow-wrap: break-word;
+}
+
+/* Checkbox */
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  padding: var(--sm) 0;
+  gap: var(--md);
+  cursor: pointer;
+  width: 100%;
+  color: var(--content);
+  font-family: var(--font-family);
+  font-size: var(--font-size-body);
+  font-style: normal;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
+}
+
+.checkbox__input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: var(--lg);
+  height: var(--lg);
+  border: var(--xxs) solid var(--border);
+  background-color: var(--background);
+  cursor: pointer;
+}
+
+/* Figma (Hover, Check=False): stroke uses --action, fill stays --background */
+.checkbox:hover .checkbox__input:not(:checked):not(:focus-visible),
+.checkbox__input:not(:checked):hover:not(:focus-visible) {
+  border-color: var(--action);
+  background-color: var(--background);
+}
+
+/* Figma (Enabled, Checked=True): fill = --background, stroke = --border, icon = --content */
+.checkbox__input:checked {
+  background-color: var(--background);
+  border-color: var(--border);
+  color: var(--content);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M13.6064 4.70703L6.53516 11.7783L3 8.24316L3.70703 7.53613L6.53516 10.3643L12.8994 4L13.6064 4.70703Z' fill='%230153CC'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Figma hover: interactive color */
+.checkbox__input:checked:hover {
+  border-color: var(--content-interactive);
+  color: var(--content-interactive);
+}
+
+/* Keep stroke/icon on base tokens; focus ring comes from outline tokens */
+.checkbox__input:checked:focus-visible {
+  border-color: var(--content-interactive);
+  color: var(--content);
+}
+
+/* Figma focus indicator for checkbox is a 2px interactive border */
+.checkbox__input:focus-visible {
+  outline: none;
+  border: var(--xs) solid var(--content-interactive);
+}
+
+/* Use the provided focus indicator asset in light theme (matches #0153CC exactly). */
+[data-theme="light"] .checkbox__input:focus-visible {
+  border: var(--xs) solid transparent;
+  border-image-source: url("../assets/Icon/icon-focus-indicator.png");
+  border-image-slice: 4;
+  border-image-repeat: stretch;
+}
+
+.checkbox__help {
+  overflow-wrap: break-word;
+}
