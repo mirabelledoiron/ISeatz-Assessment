@@ -1,0 +1,39 @@
+/*
+  tokens/scale.css — Mirabelle Doiron
+
+  Spacing, radius, and transitions. Theme-independent — same in light and dark.
+  Names match the Figma Space collection exactly (xxs=1px → xl=32px).
+  No hardcoded values anywhere else — always use these.
+*/
+
+:root {
+  --xxs: 1px;
+  --xs:  2px;
+  --sm:  4px;
+  --md:  8px;
+  --lg:  16px;
+  --xl:  32px;
+
+  /* Radius tokens — Figma uses the same scale names (sm=4px, md=8px).
+     Keep --radius-* as aliases so existing CSS keeps working. */
+  --radius-sm:   var(--sm);
+  --radius-md:   var(--md);
+  --radius-full: 100px;
+
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Figma: border: var(--xs, 2px) solid var(--content-interactive, #0153CC) */
+  --content-interactive: var(--action);
+  --focus-ring:        var(--xs) solid var(--content-interactive);
+  --focus-ring-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
+  }
+}
