@@ -1,0 +1,94 @@
+name: CI — Accessibility
+
+on:
+  push:
+    branches:
+      - main
+      - mvp-build-mirabelle
+    paths:
+      - 'src/**'
+      - 'index.html'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'index.html'
+
+jobs:
+  accessibility:
+    name: Lighthouse accessibility audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Build
+        run: npm run build
+
+      - name: Serve preview & run Lighthouse
+        run: |
+          set -euo pipefail
+
+          npm run preview -- --host 127.0.0.1 --port 4173 --strictPort &
+          PREVIEW_PID=$!
+          trap "kill $PREVIEW_PID" EXIT
+
+          # Wait for Vite preview to accept connections (avoid flaky CI failures).
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:4173/" >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          if ! curl -fsS "http://127.0.0.1:4173/" >/dev/null; then
+            echo "Preview server did not become ready on http://127.0.0.1:4173/" >&2
+            exit 1
+          fi
+
+          CHROME_PATH=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -n "${CHROME_PATH}" ]; then
+            CHROME_PATH_FLAG="--chrome-path=${CHROME_PATH}"
+          else
+            CHROME_PATH_FLAG=""
+          fi
+
+          npx lighthouse http://127.0.0.1:4173/ \
+            --only-categories=accessibility \
+            --output=json \
+            --output-path=./lighthouse-report.json \
+            ${CHROME_PATH_FLAG} \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"
+
+      - name: Assert accessibility score ≥ 90
+        run: |
+          node --input-type=module << 'EOF'
+          import { readFileSync } from 'fs'
+          const report = JSON.parse(readFileSync('./lighthouse-report.json', 'utf8'))
+          const score = report.categories.accessibility.score * 100
+          console.log(`Accessibility score: ${score}`)
+          if (score < 90) {
+            console.error(`Score ${score} is below threshold of 90`)
+            process.exit(1)
+          }
+          console.log(`Score ${score} passed.`)
+          EOF
+
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json
